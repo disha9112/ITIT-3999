@@ -4,3 +4,5 @@ venv/
 /Dataset4
 /.vscode
 /__pycache__
+/logs
+/models
