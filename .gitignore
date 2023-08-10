@@ -1,0 +1,6 @@
+venv/
+/Dataset
+/Dataset2
+/Dataset4
+/.vscode
+/__pycache__

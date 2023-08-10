@@ -1,0 +1,10 @@
+# for train 
+torch   
+scipy 
+soundfile
+# for evaluation
+tensorboard 
+tensorboardX 
+pesq    
+pystoi     
+matplotlib
