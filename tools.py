@@ -187,14 +187,20 @@ def cal_pesq(dirty_wavs, clean_wavs):
 def cal_stoi(dirty_wavs, clean_wavs):
     avg_stoi_score = 0
     for i in range(len(dirty_wavs)):
-      # if len(clean_wavs[i]) > len(dirty_wavs[i]):
-      #   stoi_score = stoi(clean_wavs[i], dirty_wavs[i].reshape((len(clean_wavs[i]))), cfg.FS, extended=False)
-      #   avg_stoi_score += stoi_score
-      # elif len(clean_wavs[i]) < len(dirty_wavs[i]):
-      #   stoi_score = stoi(clean_wavs[i].reshape((len(dirty_wavs[i]))), dirty_wavs[i], cfg.FS, extended=False)
-      #   avg_stoi_score += stoi_score
-        stoi_score = stoi(clean_wavs[i], dirty_wavs[i], cfg.FS, extended=False)
-        avg_stoi_score += stoi_score
+        if len(clean_wavs[i]) > len(dirty_wavs[i]):
+            clean_wavs_new = np.zeros(dirty_wavs[i].shape)
+            for j in range(len(clean_wavs_new)):
+                clean_wavs_new[j] = clean_wavs[i][j]
+            stoi_score = stoi(
+                clean_wavs_new, dirty_wavs[i], cfg.FS, extended=False)
+            avg_stoi_score += stoi_score
+        elif len(clean_wavs[i]) < len(dirty_wavs[i]):
+            dirty_wavs_new = np.zeros(clean_wavs[i].shape)
+            for j in range(len(dirty_wavs_new)):
+                dirty_wavs_new[j] = dirty_wavs[i][j]
+            stoi_score = stoi(
+                clean_wavs[i], dirty_wavs_new, cfg.FS, extended=False)
+            avg_stoi_score += stoi_score
     avg_stoi_score /= len(dirty_wavs)
     return avg_stoi_score
 

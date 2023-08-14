@@ -656,24 +656,9 @@ class Proposed(nn.Module):
         # ISTFT
         out_wav = self.istft(out.squeeze(1), phase).squeeze(1)
         out_wav = torch.clamp_(out_wav, -1, 1)  # clipping [-1, 1]
-        # print("success")
         return out_wav
 
     def loss(self, enhanced, target):
-        # enhanced_shape = enhanced.shape
-        # target_shape = target.shape
-        # print(enhanced.shape)
-        # print(target.shape)
-        # if enhanced_shape[1] < target_shape[1]:
-        #     torch.reshape(target, (1, enhanced.shape[1]))
-        # elif enhanced_shape[1] > target_shape[1]:
-        #     torch.reshape(enhanced, (1, target.shape[1]))
-        # enhanced.reshape(1, target.shape[1])
-        # print(enhanced.shape[1])
-        # print(target.shape[1])
-        # if (enhanced_shape[1] == target_shape[1]):
         calc_loss = F.mse_loss(enhanced, target.view(-1, 1), reduction='mean')
         print(calc_loss)
         return calc_loss
-        # else:
-        #     return torch.tensor([0])

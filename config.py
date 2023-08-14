@@ -36,7 +36,7 @@ clean_dirs_for_valid = './Dataset/valid/clean/'
 #######################################################################
 #                           hyperparameters                           #
 #######################################################################
-max_epoch = 5
+max_epoch = 30
 batch = 1
 learning_rate = 0.001
 joint_loss = True
