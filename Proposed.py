@@ -1,12 +1,10 @@
-"""
-Proposed Model
-"""
+# Proposed Model
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tools import ConvSTFT, ConviSTFT
 from config import WIN_LEN, HOP_LEN, FFT_LEN
-
 
 # causal convolution
 class causalConv2d(nn.Module):
@@ -21,7 +19,6 @@ class causalConv2d(nn.Module):
         out = self.conv(x)
         return out
 
-
 # convolution block
 class CONV(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -34,7 +31,6 @@ class CONV(nn.Module):
     def forward(self, x):
         return self.prelu(self.ln(self.conv(x)))
 
-
 # convolution block for input layer
 class INCONV(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -45,7 +41,6 @@ class INCONV(nn.Module):
 
     def forward(self, x):
         return self.prelu(self.ln(self.conv(x)))
-
 
 # sub-pixel convolution block
 class SPCONV(nn.Module):
@@ -59,20 +54,19 @@ class SPCONV(nn.Module):
         self.n = scale_factor
 
     def forward(self, x):
-        x = self.conv(x)  # [B, C, F, T]
+        x = self.conv(x)
 
-        x = x.permute(0, 3, 2, 1)  # [B, T, F, C]
+        x = x.permute(0, 3, 2, 1)
         r = torch.reshape(x, (x.size(0), x.size(1), x.size(
-            2), x.size(3) // self.n, self.n))  # [B, T, F, C//2 , 2]
-        r = r.permute(0, 1, 2, 4, 3)  # [B, T, F, 2, C//2]
+            2), x.size(3) // self.n, self.n))
+        r = r.permute(0, 1, 2, 4, 3)
         r = torch.reshape(r, (x.size(0), x.size(1), x.size(
-            2) * self.n, x.size(3) // self.n))  # [B, T, F*2, C//2]
-        r = r.permute(0, 3, 2, 1)  # [B, C, F, T]
+            2) * self.n, x.size(3) // self.n))
+        r = r.permute(0, 3, 2, 1)
 
         out = self.ln(r)
         out = self.prelu(out)
         return out
-
 
 # 1x1 conv for down-sampling
 class down_sampling(nn.Module):
@@ -84,7 +78,6 @@ class down_sampling(nn.Module):
     def forward(self, x):
         return self.down_sampling(x)
 
-
 # 1x1 conv for up-sampling
 class upsampling(nn.Module):
     def __init__(self, in_ch):
@@ -95,7 +88,6 @@ class upsampling(nn.Module):
     def forward(self, x):
         out = self.upsampling(x)
         return out
-
 
 # dilated dense block
 class dilatedDenseBlock(nn.Module):
@@ -118,45 +110,45 @@ class dilatedDenseBlock(nn.Module):
                 causalConv2d(in_ch // 2 + i * in_ch // 2, in_ch // 2, kernel_size=(3, 2),
                              padding=(2 ** i, self.caus_padd), dilation=2 ** i, groups=in_ch // 2),
                 # depth-wise
-                nn.Conv2d(in_ch // 2, in_ch // 2, kernel_size=1),  # pointwise
+                nn.Conv2d(in_ch // 2, in_ch // 2, kernel_size=1),
                 nn.GroupNorm(1, in_ch // 2, eps=1e-8),
                 nn.PReLU()
             ))
 
         self.out_layer = causalConv2d(
-            in_ch // 2, out_ch, kernel_size=(3, 2), padding=(1, 1))  # channel revert
+            in_ch // 2, out_ch, kernel_size=(3, 2), padding=(1, 1))
         self.prelu2 = nn.PReLU()
 
     def forward(self, x):
-        x = self.input_layer(x)  # C: in_ch//2
+        x = self.input_layer(x)
         x = self.prelu1(x)
 
         out1 = self.layers[0](x)
 
         # out2 = self.layers[1](torch.cat([out1, x], dim=1))
-        out2 = torch.cat([out1, x], dim=1)  # C: in_ch//2 * 2
+        out2 = torch.cat([out1, x], dim=1)
         out2 = self.layers[1](out2)
 
         # out3 = self.layers[2](torch.cat([out2, out1, x], dim=1))
         out3 = torch.cat([out2, out1], dim=1)
-        out3 = torch.cat([out3, x], dim=1)  # C: in_ch//2 * 3
+        out3 = torch.cat([out3, x], dim=1)
         out3 = self.layers[2](out3)
 
         # out4 = self.layers[3](torch.cat([out3, out2, out1, x], dim=1))
-        out4 = torch.cat([out3, out2], dim=1)  # C: in_ch//2 * 4
+        out4 = torch.cat([out3, out2], dim=1)
         out4 = torch.cat([out4, out1], dim=1)
         out4 = torch.cat([out4, x], dim=1)
         out4 = self.layers[3](out4)
 
         # out5 = self.layers[4](torch.cat([out4, out3, out2, out1, x], dim=1))
-        out5 = torch.cat([out4, out3], dim=1)  # C: in_ch//2 * 5
+        out5 = torch.cat([out4, out3], dim=1)
         out5 = torch.cat([out5, out2], dim=1)
         out5 = torch.cat([out5, out1], dim=1)
         out5 = torch.cat([out5, x], dim=1)
         out5 = self.layers[4](out5)
 
         # out = self.layers[5](torch.cat([out5, out4, out3, out2, out1, x], dim=1))
-        out = torch.cat([out5, out4], dim=1)  # C: in_ch//2 * 6
+        out = torch.cat([out5, out4], dim=1)
         out = torch.cat([out, out3], dim=1)
         out = torch.cat([out, out2], dim=1)
         out = torch.cat([out, out1], dim=1)
@@ -168,11 +160,10 @@ class dilatedDenseBlock(nn.Module):
 
         return out
 
-
-# Multi-Scale Feature Extraction (MSFE) - e6 (for encoder part)
-class MSFEe6(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - e6 (for encoder part)
+class MLFEe6(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEe6, self).__init__()
+        super(MLFEe6, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -220,10 +211,10 @@ class MSFEe6(nn.Module):
         return out, out1, out2, out3, out4, out5, out6
 
 
-# Multi-Scale Feature Extraction (MSFE) - e5
-class MSFEe5(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - e5
+class MLFEe5(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEe5, self).__init__()
+        super(MLFEe5, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -267,10 +258,10 @@ class MSFEe5(nn.Module):
         return out, out1, out2, out3, out4, out5
 
 
-# Multi-Scale Feature Extraction (MSFE) - e4
-class MSFEe4(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - e4
+class MLFEe4(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEe4, self).__init__()
+        super(MLFEe4, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -310,10 +301,10 @@ class MSFEe4(nn.Module):
         return out, out1, out2, out3, out4
 
 
-# Multi-Scale Feature Extraction (MSFE) - e3
-class MSFEe3(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - e3
+class MLFEe3(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEe3, self).__init__()
+        super(MLFEe3, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -349,10 +340,10 @@ class MSFEe3(nn.Module):
         return out, out1, out2, out3
 
 
-# Multi-Scale Feature Extraction (MSFE) - d6  (for decoder part)
-class MSFEd6(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - d6  (for decoder part)
+class MLFEd6(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEd6, self).__init__()
+        super(MLFEd6, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -400,10 +391,10 @@ class MSFEd6(nn.Module):
         return out
 
 
-# Multi-Scale Feature Extraction (MSFE) - d5
-class MSFEd5(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - d5
+class MLFEd5(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEd5, self).__init__()
+        super(MLFEd5, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -447,10 +438,10 @@ class MSFEd5(nn.Module):
         return out
 
 
-# Multi-Scale Feature Extraction (MSFE) - d4
-class MSFEd4(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - d4
+class MLFEd4(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEd4, self).__init__()
+        super(MLFEd4, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -490,10 +481,10 @@ class MSFEd4(nn.Module):
         return out
 
 
-# Multi-Scale Feature Extraction (MSFE) - d3
-class MSFEd3(nn.Module):
+# Multi-Level Feature Extraction (MLFE) - d3
+class MLFEd3(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch):
-        super(MSFEd3, self).__init__()
+        super(MLFEd3, self).__init__()
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
@@ -528,7 +519,6 @@ class MSFEd3(nn.Module):
         out += x
         return out
 
-
 # Proposed network
 class Proposed(nn.Module):
 
@@ -539,22 +529,22 @@ class Proposed(nn.Module):
         self.input_layer = INCONV(in_ch, out_ch)
 
         # encoder
-        self.en1 = MSFEe6(out_ch, mid_ch, out_ch)
+        self.en1 = MLFEe6(out_ch, mid_ch, out_ch)
         self.down_sampling1 = down_sampling(out_ch)
 
-        self.en2 = MSFEe5(out_ch, mid_ch, out_ch)
+        self.en2 = MLFEe5(out_ch, mid_ch, out_ch)
         self.down_sampling2 = down_sampling(out_ch)
 
-        self.en3 = MSFEe4(out_ch, mid_ch, out_ch)
+        self.en3 = MLFEe4(out_ch, mid_ch, out_ch)
         self.down_sampling3 = down_sampling(out_ch)
 
-        self.en4 = MSFEe4(out_ch, mid_ch, out_ch)
+        self.en4 = MLFEe4(out_ch, mid_ch, out_ch)
         self.down_sampling4 = down_sampling(out_ch)
 
-        self.en5 = MSFEe4(out_ch, mid_ch, out_ch)
+        self.en5 = MLFEe4(out_ch, mid_ch, out_ch)
         self.down_sampling5 = down_sampling(out_ch)
 
-        self.en6 = MSFEe3(out_ch, mid_ch, out_ch)
+        self.en6 = MLFEe3(out_ch, mid_ch, out_ch)
         self.down_sampling6 = down_sampling(out_ch)
 
         # Bottleneck block
@@ -564,22 +554,22 @@ class Proposed(nn.Module):
 
         # decoder
         self.upsampling1 = upsampling(out_ch * 2)
-        self.de1 = MSFEd3(out_ch * 2, mid_ch, out_ch)
+        self.de1 = MLFEd3(out_ch * 2, mid_ch, out_ch)
 
         self.upsampling2 = upsampling(out_ch * 2)
-        self.de2 = MSFEd4(out_ch * 2, mid_ch, out_ch)
+        self.de2 = MLFEd4(out_ch * 2, mid_ch, out_ch)
 
         self.upsampling3 = upsampling(out_ch * 2)
-        self.de3 = MSFEd4(out_ch * 2, mid_ch, out_ch)
+        self.de3 = MLFEd4(out_ch * 2, mid_ch, out_ch)
 
         self.upsampling4 = upsampling(out_ch * 2)
-        self.de4 = MSFEd4(out_ch * 2, mid_ch, out_ch)
+        self.de4 = MLFEd4(out_ch * 2, mid_ch, out_ch)
 
         self.upsampling5 = upsampling(out_ch * 2)
-        self.de5 = MSFEd5(out_ch * 2, mid_ch, out_ch)
+        self.de5 = MLFEd5(out_ch * 2, mid_ch, out_ch)
 
         self.upsampling6 = upsampling(out_ch * 2)
-        self.de6 = MSFEd6(out_ch * 2, mid_ch, out_ch)
+        self.de6 = MLFEd6(out_ch * 2, mid_ch, out_ch)
 
         # output layer
         self.output_layer = nn.Conv2d(out_ch, in_ch, kernel_size=1)
@@ -590,8 +580,8 @@ class Proposed(nn.Module):
 
     def forward(self, x):
         # STFT
-        mags, phase = self.stft(x)  # [B, F, T]
-        hx = mags.unsqueeze(1)  # [B, 1, F, T]
+        mags, phase = self.stft(x)
+        hx = mags.unsqueeze(1)
         hx = hx[:, :, 1:]
 
         # input layer

@@ -95,24 +95,21 @@ for epoch in range(epoch_start_idx, cfg.max_epoch + 1):
     train_loss = trainer(model, train_loader, optimizer, writer, epoch, DEVICE)
 
     # save checkpoint file to resume training
-    save_path = str(dir2sav + '/chkpt_%d.pt' % epoch)
-    torch.save({
-        'model': model.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'epoch': epoch
-    }, save_path)
+    # save_path = str(dir2sav + '/chkpt_%d.pt' % epoch)
+    # torch.save({
+    #     'model': model.state_dict(),
+    #     'optimizer': optimizer.state_dict(),
+    #     'epoch': epoch
+    # }, save_path)
 
     # validate
     valid_loss, pesq, stoi = validator(
         model, valid_loader, writer, epoch, DEVICE)
-    print('EPOCH[{}] T {:.6f} |  V {:.6f} takes {:.3f} seconds'
-          .format(epoch, train_loss, valid_loss, time.time() - st_time))
+    print('EPOCH[{}]\n').format(epoch)
     print('PESQ {:.6f} | STOI {:.6f}'.format(pesq, stoi))
-
     # write train log
-    train_log_fp.write('EPOCH[{}] T {:.6f} |  V {:.6f} takes {:.3f} seconds\n'
-                       .format(epoch, train_loss, valid_loss, time.time() - st_time))
+    train_log_fp.write('EPOCH[{}]\n').format(epoch)
     train_log_fp.write('PESQ {:.6f} | STOI {:.6f}\n'.format(pesq, stoi))
 
-print('Training has been finished.')
+print('Training has finished.')
 train_log_fp.close()

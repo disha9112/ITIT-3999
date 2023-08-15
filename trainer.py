@@ -1,10 +1,6 @@
 import torch
 import tools
 
-
-#######################################################################
-#                            For train                                #
-#######################################################################
 def train(model, train_loader, optimizer, writer, EPOCH, DEVICE):
     # initialization
     train_loss = 0
@@ -15,7 +11,7 @@ def train(model, train_loader, optimizer, writer, EPOCH, DEVICE):
     for inputs, targets in tools.Bar(train_loader):
         batch_num += 1
 
-        # to cuda
+        # to chosen device
         inputs = inputs.float().to(DEVICE)
         targets = targets.float().to(DEVICE)
 
@@ -31,7 +27,7 @@ def train(model, train_loader, optimizer, writer, EPOCH, DEVICE):
     train_loss /= batch_num
 
     # tensorboard
-    writer.log_train_loss(train_loss, EPOCH)
+    # writer.log_train_loss(train_loss, EPOCH)
 
     return train_loss
 
@@ -82,10 +78,6 @@ def joint_train(model, train_loader, optimizer, writer, EPOCH, DEVICE):
 
     return train_loss
 
-
-#######################################################################
-#                          For validation                             #
-#######################################################################
 def valid(model, valid_loader, writer, EPOCH, DEVICE):
     # initialization
     valid_loss = 0
@@ -182,12 +174,5 @@ def joint_valid(model, valid_loader, writer, EPOCH, DEVICE):
         valid_loss /= batch_num
         avg_pesq /= batch_num
         avg_stoi /= batch_num
-
-        # tensorboard
-        writer.log_valid_loss(valid_loss, EPOCH)
-        writer.log_valid_joint_loss(
-            valid_main_loss / batch_num, valid_sub_loss1 / batch_num, EPOCH)
-        writer.log_scores(avg_pesq, avg_stoi, EPOCH)
-        writer.log_wav(inputs[0], targets[0], outputs[0], EPOCH)
 
         return valid_loss, avg_pesq, avg_stoi

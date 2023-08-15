@@ -3,7 +3,6 @@ from torch.utils.data import Dataset, DataLoader
 import config as cfg
 from tools import scan_directory, find_pair, addr2wav
 
-
 def create_dataloader(mode):
     if mode == 'train':
         return DataLoader(
@@ -20,7 +19,6 @@ def create_dataloader(mode):
             dataset=Wave_Dataset(mode),
             batch_size=cfg.batch, shuffle=False, num_workers=0
         )
-
 
 class Wave_Dataset(Dataset):
     def __init__(self, mode):
@@ -53,7 +51,6 @@ class Wave_Dataset(Dataset):
         inputs = torch.from_numpy(inputs)
         targets = torch.from_numpy(targets)
 
-        # (-1, 1)
         inputs = torch.clamp_(inputs, -1, 1)
         targets = torch.clamp_(targets, -1, 1)
 
