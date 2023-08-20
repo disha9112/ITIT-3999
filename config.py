@@ -15,7 +15,8 @@ clean_dirs_for_train = './Dataset/train/clean/'
 noisy_dirs_for_valid = './Dataset/valid/noisy/'
 clean_dirs_for_valid = './Dataset/valid/clean/'
 
-max_epoch = 30
+# hyperparameters
+max_epoch = 32
 batch = 4
 learning_rate = 0.001
 joint_loss = True

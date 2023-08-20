@@ -23,7 +23,6 @@ def scan_directory(dir_name):
                 addrs.append(filepath)
     return addrs
 
-
 # VoiceBank_16K
 def find_pair(noisy_dirs):
     clean_dirs = []

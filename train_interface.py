@@ -11,9 +11,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-#######################################################################
-#                     Set a job and a log folder                      #
-######################################################################
 dir2sav = cfg.job_dir
 dir2log = cfg.logs_dir
 
@@ -23,9 +20,7 @@ if not os.path.exists(dir2sav):
 if not os.path.exists(dir2log):
     os.mkdir(dir2log)
 
-#######################################################################
-#                            Model init                               #
-#######################################################################
+# device setup
 DEVICE = torch.device(cfg.DEVICE)
 
 # define model
@@ -57,15 +52,11 @@ if os.path.exists(cfg.pretrained_addr):
 
     dir2sav = cfg.pretrained_addr
 
-#######################################################################
-#                          Create Dataloader                          #
-#######################################################################
+# create dataloader
 train_loader = create_dataloader(mode='train')
 valid_loader = create_dataloader(mode='valid')
 
-#######################################################################
-#                       Confirm model information                     #
-#######################################################################
+# print model info
 print('%d-%d-%d %d:%d:%d\n' %
       (time.localtime().tm_year, time.localtime().tm_mon,
        time.localtime().tm_mday, time.localtime().tm_hour,
@@ -78,12 +69,7 @@ print('total params   : %d (%.2f M, %.2f MBytes)\n' %
 # save the status information
 tools.write_status(dir2sav)
 
-
-#######################################################################
-#######################################################################
-#                               Main                                  #
-#######################################################################
-#######################################################################
+# save model info
 writer = tools.Writer(dir2log)
 train_log_fp = open(dir2sav + '/train_log.txt', 'a')
 
@@ -93,14 +79,6 @@ for epoch in range(epoch_start_idx, cfg.max_epoch + 1):
 
     # train
     train_loss = trainer(model, train_loader, optimizer, writer, epoch, DEVICE)
-
-    # save checkpoint file to resume training
-    # save_path = str(dir2sav + '/chkpt_%d.pt' % epoch)
-    # torch.save({
-    #     'model': model.state_dict(),
-    #     'optimizer': optimizer.state_dict(),
-    #     'epoch': epoch
-    # }, save_path)
 
     # validate
     valid_loss, pesq, stoi = validator(

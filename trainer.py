@@ -44,7 +44,7 @@ def joint_train(model, train_loader, optimizer, writer, EPOCH, DEVICE):
     for inputs, targets in tools.Bar(train_loader):
         batch_num += 1
 
-        # to cuda
+        # to device
         inputs = inputs.float().to(DEVICE)
         targets = targets.float().to(DEVICE)
 
@@ -72,9 +72,9 @@ def joint_train(model, train_loader, optimizer, writer, EPOCH, DEVICE):
     train_loss /= batch_num
 
     # tensorboard
-    writer.log_train_loss(train_loss, EPOCH)
-    writer.log_train_joint_loss(
-        train_main_loss / batch_num, train_sub_loss1 / batch_num, EPOCH)
+    # writer.log_train_loss(train_loss, EPOCH)
+    # writer.log_train_joint_loss(
+    #     train_main_loss / batch_num, train_sub_loss1 / batch_num, EPOCH)
 
     return train_loss
 
@@ -139,7 +139,7 @@ def joint_valid(model, valid_loader, writer, EPOCH, DEVICE):
         for inputs, targets in tools.Bar(valid_loader):
             batch_num += 1
 
-            # to cuda
+            # to device
             inputs = inputs.float().to(DEVICE)
             targets = targets.float().to(DEVICE)
 
