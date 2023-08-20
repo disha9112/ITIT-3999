@@ -5,5 +5,3 @@ venv/
 /Dataset5
 /.vscode
 /__pycache__
-/logs
-/models
