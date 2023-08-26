@@ -285,13 +285,6 @@ def write_status(dir2log):
     fp.write('FS: {} | WIN_LEN: {} | HOP_LEN: {} | FFT_LEN: {}\n\n'
              .format(cfg.FS, cfg.WIN_LEN, cfg.HOP_LEN, cfg.FFT_LEN))
 
-    fp.write('- Train data directory: \n')
-    fp.write('Clean: {} | Noisy: {}\n'.format(
-        cfg.clean_dirs_for_train, cfg.noisy_dirs_for_train))
-    fp.write('- Valid data directory: \n')
-    fp.write('Clean: {} | Noisy: {}\n'.format(
-        cfg.clean_dirs_for_valid, cfg.noisy_dirs_for_valid))
-
     fp.write('- Hyperparameters\n')
     fp.write('Learning rate: {} | Batch: {}\n\n'.format(
         cfg.learning_rate, cfg.batch))
